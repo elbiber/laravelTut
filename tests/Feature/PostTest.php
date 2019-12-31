@@ -57,7 +57,6 @@ class PostTest extends TestCase
         $this->post('/posts', $params)
             ->assertStatus(302)
             ->assertSessionHas('status');
-
         $this->assertEquals(session('status'), 'Blog post was created!');
     }
 
@@ -122,7 +121,8 @@ class PostTest extends TestCase
 
     }
 
-    private function createDummyBlogPost(): BlogPost{
+    private function createDummyBlogPost(): BlogPost
+    {
 
         $post = new BlogPost();
         $post->title = 'New Title';
