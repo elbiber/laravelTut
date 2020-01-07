@@ -5,7 +5,8 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
-use App\BlogPost as BlogPost;
+use App\BlogPost;
+use App\Comment;
 use App\Http\Middleware as Middleware;
 
 
@@ -39,6 +40,7 @@ class PostTest extends TestCase
 
         // Assert
         $response->assertSeeText('New Title');
+        $response->assertSeeText('No comments yet!');
 
         $this->assertDatabaseHas('blog_posts', [
             'title' => 'New title'
@@ -121,14 +123,39 @@ class PostTest extends TestCase
 
     }
 
+    public function testSee1BlogPostWithComments()
+    {
+/*         // Arrange
+        $user = $this->user();
+        $post = $this->createDummyBlogPost();
+        factory(Comment::class, 4)->create([
+            'commentable_id' => $post->id,
+            'commentable_type' => 'App\BlogPost',
+            'user_id' => $user->id
+        ]);
+        $response = $this->get('/posts');
+        $response->assertSeeText('4 comments'); */
+        $post = $this->createDummyBlogPost();
+        factory(Comment::class, 4)->create([
+            'blog_post_id' => $post->id
+        ]);
+        $response = $this->get('/posts');
+        $response->assertSeeText('4 comments');
+
+ 
+    }
+
     private function createDummyBlogPost(): BlogPost
     {
 
-        $post = new BlogPost();
+/*         $post = new BlogPost();
         $post->title = 'New Title';
         $post->content = 'New Content of Post.';
-        $post->save();
+        $post->save(); */
 
-        return $post;
+        return factory(BlogPost::class)->states('new-title')->create();
+
+
+        /* return $post; */
     }
 }
