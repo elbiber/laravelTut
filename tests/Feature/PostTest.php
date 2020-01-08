@@ -10,6 +10,7 @@ use App\Comment;
 use App\Http\Middleware as Middleware;
 
 
+
 class PostTest extends TestCase
 {
     use RefreshDatabase;
@@ -47,16 +48,42 @@ class PostTest extends TestCase
         ]);
     }
 
+    public function testSee1BlogPostWithComments()
+    {
+/*         // Arrange
+        $user = $this->user();
+        $post = $this->createDummyBlogPost();
+        factory(Comment::class, 4)->create([
+            'commentable_id' => $post->id,
+            'commentable_type' => 'App\BlogPost',
+            'user_id' => $user->id
+        ]);
+        $response = $this->get('/posts');
+        $response->assertSeeText('4 comments'); */
+        $post = $this->createDummyBlogPost();
+        factory(Comment::class, 4)->create([
+            'blog_post_id' => $post->id
+        ]);
+        $response = $this->get('/posts');
+        $response->assertSeeText('4 comments');
+
+ 
+    }
+
     public function testStoreValid()
     {
         // Arange
+        //$user = $this->user;
+
         $params = [
             'title' => 'Valid title',
             'content' => 'At least 10 characters'
         ];
+
         $this->withoutMiddleware(Middleware\VerifyCsrfToken::class);
 
-        $this->post('/posts', $params)
+        $this->actingAs($this->user())
+            ->post('/posts', $params)
             ->assertStatus(302)
             ->assertSessionHas('status');
         $this->assertEquals(session('status'), 'Blog post was created!');
@@ -69,9 +96,11 @@ class PostTest extends TestCase
             'title' => 'x',
             'content' => 'x'
         ];
-        $this->withoutMiddleware(Middleware\VerifyCsrfToken::class);
 
-        $this->post('/posts', $params)
+        $this->withoutMiddleware(Middleware\VerifyCsrfToken::class);        
+
+        $this->actingAs($this->user())
+            ->post('/posts', $params)
             ->assertStatus(302)
             ->assertSessionHas('errors');
 
@@ -93,9 +122,10 @@ class PostTest extends TestCase
             'content' => 'At least 10 characters',
         ];
 
-        $this->withoutMiddleware(Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(Middleware\VerifyCsrfToken::class);        
 
-        $this->put("/posts/{$post->id}", $params)
+        $this->actingAs($this->user())
+            ->put("/posts/{$post->id}", $params)
             ->assertStatus(302)
             ->assertSessionHas('status');
 
@@ -111,38 +141,19 @@ class PostTest extends TestCase
         $post = $this->createDummyBlogPost();
 
         $this->assertDatabaseHas('blog_posts', $post->toArray());
+        
 
         $this->withoutMiddleware(Middleware\VerifyCsrfToken::class);
+        
 
-        $this->delete("/posts/{$post->id}")
+        $this->actingAs($this->user())
+            ->delete("/posts/{$post->id}")
             ->assertStatus(302)
             ->assertSessionHas('status');
 
         $this->assertDatabaseMissing('blog_posts', $post->toArray());
         $this->assertEquals(session('status'), 'Blog post was deleted!');
 
-    }
-
-    public function testSee1BlogPostWithComments()
-    {
-/*         // Arrange
-        $user = $this->user();
-        $post = $this->createDummyBlogPost();
-        factory(Comment::class, 4)->create([
-            'commentable_id' => $post->id,
-            'commentable_type' => 'App\BlogPost',
-            'user_id' => $user->id
-        ]);
-        $response = $this->get('/posts');
-        $response->assertSeeText('4 comments'); */
-        $post = $this->createDummyBlogPost();
-        factory(Comment::class, 4)->create([
-            'blog_post_id' => $post->id
-        ]);
-        $response = $this->get('/posts');
-        $response->assertSeeText('4 comments');
-
- 
     }
 
     private function createDummyBlogPost(): BlogPost
